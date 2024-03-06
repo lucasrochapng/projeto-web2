@@ -15,6 +15,10 @@ class Repository {
         return $this->model->all();
     }
 
+    public function selectAllWith(array $orm) {
+        return $this->model::with($orm)->get();
+    }
+
     public function findById(int $id) {
         return $this->model->find($id);
     }

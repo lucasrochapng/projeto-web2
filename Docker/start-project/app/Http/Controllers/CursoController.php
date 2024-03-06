@@ -4,26 +4,23 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Repositories\EixoRepository;
-use App\Models\Eixo;
+use App\Repositories\NivelRepository;
 
-class EixoController extends Controller
+class CursoController extends Controller
 {
-
     protected $repository;
 
     public function __construct(){
-        $this->repository = new EixoRepository();
+        $this->repository = new CursoRepository();
     }
-
 
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $data = $this->repository->selectAllWith(['curso']);
+        $data = $this->repository->SelectAllWith(['eixo', 'nivel']);
         return $data;
-
     }
 
     /**
@@ -39,10 +36,19 @@ class EixoController extends Controller
      */
     public function store(Request $request)
     {
-        $obj = new Eixo();
-        $obj->nome = mb_strtoupper($request->nome, 'UTF-8');
-        $this->repository->save($obj);
-        return "<h1>Store - OK!</h1>";
+        $objEixo = (new EixoRepository())->findById($request->eixo_id);
+        $objNivel = (new NivelRepository())->findById($request->nivel_id);
+        if(isset($objEixo) && isset($objNivel)) {
+            $obj = new Curso();
+            $obj->nome = mb_strtoupper($request->nome, 'UTF-8');
+            $obj->sigla = mb_strtoupper($request->sigla, 'UTF-8');
+            $obj->total_horas = $request->horas;
+            $obj->eixo()->associate($objEixo);
+            $obj->nivel()->associate($objNivel);
+            $this->repository->save($obj);
+            return "<h1>Store - OK!</h1>";
+        }
+        return "<h1>Store - Not found Eixo or Nível!</h1>";
     }
 
     /**
@@ -68,12 +74,18 @@ class EixoController extends Controller
     public function update(Request $request, string $id)
     {
         $obj = $this->repository->findById($id);
-        if(isset($obj)) {
+        $objEixo = (new EixoRepository())->findById($request->eixo_id);
+        $objNivel = (new NivelRepository())->findById($request->nivel_id);
+        if(isset($obj) && isset($objEixo) && isset($objNivel)) {
             $obj->nome = mb_strtoupper($request->nome, 'UTF-8');
+            $obj->sigla = mb_strtoupper($request->sigla, 'UTF-8');
+            $obj->total_horas = $request->horas;
+            $obj->eixo()->associate($objEixo);
+            $obj->nivel()->associate($objNivel);
             $this->repository->save($obj);
             return "<h1>Upate - OK!</h1>";
         }
-        return "<h1>Upate - Not found Eixo!</h1>";
+        return "<h1>Upate - Not found Curso or Eixo or Nível!</h1>";
     }
 
     /**
